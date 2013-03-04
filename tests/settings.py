@@ -32,4 +32,7 @@ DATABASES = {
     }
 }
 
-BROKER_URL = "redis://127.0.0.1/2"
+REDIS_HOST = "127.0.0.1"
+BROKER_URL = "redis://%s/2" % REDIS_HOST
+
+REDIS_SETTINGS = {'host': REDIS_HOST}

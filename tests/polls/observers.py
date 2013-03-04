@@ -1,6 +1,5 @@
 from sherlock.observer import ModelObserver, ObjectObserver
 from .models import Poll
-from celery.contrib.methods import task
 
 
 # class PollObserver(ModelObserver):
@@ -25,8 +24,9 @@ class PollObserver(ObjectObserver):
     def has_changed(self, field_name):
         return True
 
-    def question_on_changed(self):
-        print '==========> question field has changed'
+    def question_on_changed(self, previous, current):
+        print '==========> Previous: %s' % previous
+        print '==========> Previous: %s' % current
 
 
 poll_observer = PollObserver()
