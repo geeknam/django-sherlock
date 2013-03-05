@@ -31,7 +31,9 @@ class Observer(object):
 
 class ModelObserver(Observer):
 
-    def __init__(self, custom_signals={}):
+    def __init__(self, *args, **kwargs):
+        custom_signals = kwargs.get('custom_signals', {})
+
         custom_signals.update(default_signals)
         for signal_name, signal in custom_signals.items():
             signal_receiver = getattr(self, '%s_receiver' % signal_name, None)
@@ -41,11 +43,17 @@ class ModelObserver(Observer):
 
 class ObjectObserver(ModelObserver):
 
-    def __init__(self, custom_signals={}):
-        super(ObjectObserver, self).__init__(custom_signals)
-        self.storage_client = HashTempStore(
-            prefix='sherlock:tempstore:%s:%s' % (self.get_app_label(), self.get_model_name())
-        )
+    def __init__(self, *args, **kwargs):
+        super(ObjectObserver, self).__init__(*args, **kwargs)
+
+        timeout = kwargs.get('tempstore_timeout', None)
+        tempstore_settings = {
+            'prefix': 'sherlock:tempstore:%s:%s' % (self.get_app_label(), self.get_model_name()),
+        }
+        if timeout:
+            tempstore_settings.update({'timeout': timeout})
+
+        self.storage_client = HashTempStore(**tempstore_settings)
 
     def get_instance_field_value(self, instance, field_name):
         """
@@ -60,6 +68,10 @@ class ObjectObserver(ModelObserver):
             return getattr(instance, field_name) if field_value else field_value
 
     def save_state(self, instance, field_name):
+        """
+        Temporarily stores field value. Timout can be define.
+        Used in comparison when the the field changes.
+        """
         hash_field_name = str(instance.pk)
         value = self.get_instance_field_value(instance, field_name)
         self.storage_client.set(
@@ -67,9 +79,16 @@ class ObjectObserver(ModelObserver):
         )
 
     def get_state(self, instance, field_name):
+        """
+        Gets field value from temporary storage.
+        """
         return self.storage_client.get(field_name, str(instance.pk))
 
     def get_changes(self, instance, field_name):
+        """
+        Compare previous and current value of the field.
+        Return previous and current value in a list if there are changes
+        """
         previous = self.get_state(instance, field_name)
         current = self.get_instance_field_value(instance, field_name)
         if previous != current:
