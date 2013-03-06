@@ -1,29 +1,31 @@
-from sherlock.observer import ModelObserver, ObjectObserver
+from sherlock.observer import ObjectObserver
+from sherlock.publisher import BasePublisher
 from .models import Poll, Choice
 
 
-# class PollObserver(ModelObserver):
+class PollPublisher(BasePublisher):
+    class Meta:
+        # requires_authorisation = ('question', )
+        email = True
+        # sse_channels = ('all_events', )
 
-#     class Meta:
-#         model = Poll
+    def send_email(self, emails, instance, field=None, changes=None):
+        print '=========> Sending email to: %s' % emails
+        print '==============> Instance pk: %s' % instance.pk
+        print '==============> Changes: %s' % changes
 
-#     def post_save_receiver(self, sender, instance, **kwargs):
-#         self.receiver_task.delay(sender=sender, instance_pk=instance.pk)
-
-#     @task()
-#     def receiver_task(self, sender, instance_pk):
-#         print '==========> %s: %s' % (sender, instance_pk)
+    # def publish_question(self, instance, previous, current):
+    #     print '==============> Instance pk: %s' % instance.pk
+    #     print '==============> Previous: %s' % previous
+    #     print '==============> Current: %s' % current
 
 
 class PollObserver(ObjectObserver):
+    publisher = PollPublisher()
 
     class Meta:
         model = Poll
         fields = ('question', )
-
-    def question_on_changed(self, previous, current):
-        print '==========> Previous: %s' % previous
-        print '==========> Current: %s' % current
 
 
 class ChoiceObserver(ObjectObserver):
@@ -31,10 +33,6 @@ class ChoiceObserver(ObjectObserver):
     class Meta:
         model = Choice
         fields = ('poll', )
-
-    def poll_on_changed(self, previous, current):
-        print '==========> Previous: %s' % previous
-        print '==========> Current: %s' % current
 
 
 poll_observer = PollObserver()

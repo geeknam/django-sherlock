@@ -1,7 +1,6 @@
-from .base import ObserverMetaclass
+from .base import Metaclass
 from .storage import HashTempStore
 from django.db.models.signals import post_save, pre_delete
-
 
 default_signals = {
     'post_save': post_save,
@@ -11,7 +10,7 @@ default_signals = {
 
 class Observer(object):
 
-    __metaclass__ = ObserverMetaclass
+    __metaclass__ = Metaclass
 
     def get_app_label(self):
         return self._meta.model._meta.app_label
@@ -38,6 +37,7 @@ class ModelObserver(Observer):
         for signal_name, signal in custom_signals.items():
             signal_receiver = getattr(self, '%s_receiver' % signal_name, None)
             if signal_receiver:
+                # weak=False stops the receiver from being garbage collected
                 signal.connect(signal_receiver, sender=self.get_model(), weak=False)
 
 
@@ -89,6 +89,7 @@ class ObjectObserver(ModelObserver):
         Compare previous and current value of the field.
         Return previous and current value in a list if there are changes
         """
+
         previous = self.get_state(instance, field_name)
         current = self.get_instance_field_value(instance, field_name)
         if previous != current:
@@ -99,9 +100,18 @@ class ObjectObserver(ModelObserver):
     def post_save_receiver(self, sender, instance, created, **kwargs):
         if not created:
             for observed_field in self.get_fields():
-                on_change_method = getattr(self, '%s_on_changed' % observed_field, None)
                 changes = self.get_changes(instance, observed_field)
-                if on_change_method and changes:
-                    on_change_method(*changes)
+                if changes:
+                    self.on_change(instance, observed_field, changes=changes)
 
-
+    def on_change(self, instance, field, **kwargs):
+        changes = kwargs.get('changes')
+        publish_method = getattr(self.publisher, 'publish_%s' % field, None)
+        self.publisher.on_field_change(instance, field)
+        if not self.publisher._requires_authorisation(field):
+            if publish_method:
+                publish_method(instance, *changes)
+            else:
+                self.publisher._publish(instance, field)
+        else:
+            self.publisher.authorise(instance, *changes)
