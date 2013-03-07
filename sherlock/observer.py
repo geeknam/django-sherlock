@@ -40,6 +40,9 @@ class ModelObserver(Observer):
                 # weak=False stops the receiver from being garbage collected
                 signal.connect(signal_receiver, sender=self.get_model(), weak=False)
 
+    def post_save_receiver(self, sender, instance, created, **kwargs):
+        self.publisher.on_instance_change(instance, created, **kwargs)
+
 
 class ObjectObserver(ModelObserver):
 
@@ -94,24 +97,17 @@ class ObjectObserver(ModelObserver):
         current = self.get_instance_field_value(instance, field_name)
         if previous != current:
             self.save_state(instance, field_name)
-            return [previous, current]
-        return []
+            return {
+                'previous': previous,
+                'current': current
+            }
+        return None
 
     def post_save_receiver(self, sender, instance, created, **kwargs):
         if not created:
             for observed_field in self.get_fields():
                 changes = self.get_changes(instance, observed_field)
                 if changes:
-                    self.on_change(instance, observed_field, changes=changes)
-
-    def on_change(self, instance, field, **kwargs):
-        changes = kwargs.get('changes')
-        publish_method = getattr(self.publisher, 'publish_%s' % field, None)
-        self.publisher.on_field_change(instance, field)
-        if not self.publisher._requires_authorisation(field):
-            if publish_method:
-                publish_method(instance, *changes)
-            else:
-                self.publisher._publish(instance, field)
-        else:
-            self.publisher.authorise(instance, *changes)
+                    self.publisher.on_field_change(
+                        instance, observed_field, changes=changes
+                    )

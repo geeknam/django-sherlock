@@ -14,6 +14,9 @@ class Channel(models.Model):
 
     objects = ChannelManager()
 
+    def __unicode__(self):
+        return self.name
+
     def get_model(self):
         identifiers = self.name.split(':')
         return models.get_model(identifiers[1], identifiers[3])
@@ -35,8 +38,11 @@ class Channel(models.Model):
 
 class Subscriber(models.Model):
 
-    email = models.EmailField()
+    email = models.EmailField(unique=True)
     channels = models.ManyToManyField('Channel')
+
+    def __unicode__(self):
+        return self.email
 
 
 for app in settings.INSTALLED_APPS:
