@@ -122,7 +122,7 @@ class ObjectObserverTest(TestCase):
             self.assertEqual(v, self.publisher.send_email.context['kwargs'][k])
 
         poll.delete()
-        self.observer.disconnect_signals()
+        del self.observer.signals
 
 
     def test_publish_custom(self):
@@ -172,4 +172,4 @@ class ObjectObserverTest(TestCase):
             self.assertEqual(v, self.publisher.publish_question.context['kwargs'][k])
 
         poll.delete()
-        self.observer.disconnect_signals()
+        del self.observer.signals
