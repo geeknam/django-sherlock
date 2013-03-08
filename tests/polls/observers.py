@@ -1,5 +1,5 @@
-from sherlock.observer import ObjectObserver, ModelObserver
-from sherlock.publisher import BasePublisher
+from sherlock.observers import ObjectObserver, ModelObserver
+from sherlock.publishers import BasePublisher
 from .models import Poll, Choice
 
 
@@ -9,15 +9,17 @@ class PollPublisher(BasePublisher):
         # sse_channels = ('all_events', )
         email = True
 
-    def send_email(self, emails, instance, field=None, changes=None):
-        print '=========> Sending email to: %s' % emails
+    def send_email(self, emails, instance, **context):
+        print '==============>', self
+        print '==============> Sending email to: %s' % emails
         print '==============> Instance pk: %s' % instance.pk
-        print '==============> Changes: %s' % changes
+        print '==============> Context: %s' % context
 
-    def publish_question(self, instance, field, changes):
+    def publish_question(self, instance, identifier, **context):
+        print '==============>', self
         print '==============> Instance pk: %s' % instance.pk
-        print '==============> Field: %s' % field
-        print '==============> Changes: %s' % changes
+        print '==============> Identifier: %s' % identifier
+        print '==============> Context: %s' % context
 
 
 class PollModelObserver(ModelObserver):

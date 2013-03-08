@@ -1,5 +1,5 @@
 from .base import Metaclass
-from .storage import HashTempStore
+from .storage import RedisTempStore
 from django.db.models.signals import post_save, pre_delete
 
 default_signals = {
@@ -29,7 +29,12 @@ class Observer(object):
 
 
 class ModelObserver(Observer):
-
+    """
+    Observer that listens to some built-in and custom signals.
+    Receivers should be named as RECEIVERNAME_receiver
+    where RECEIVERNAME is the name of the receiver.
+        E.g: a receiver for 'post_save signal' would be 'post_save_receiver'
+    """
     def __init__(self, *args, **kwargs):
         custom_signals = kwargs.get('custom_signals', {})
 
@@ -45,8 +50,10 @@ class ModelObserver(Observer):
 
 
 class ObjectObserver(ModelObserver):
-
-    def __init__(self, *args, **kwargs):
+    """
+    Model instance observer that tracks changes of defined fields.
+    """
+    def __init__(self, storage=RedisTempStore, *args, **kwargs):
         super(ObjectObserver, self).__init__(*args, **kwargs)
 
         timeout = kwargs.get('tempstore_timeout', None)
@@ -56,7 +63,7 @@ class ObjectObserver(ModelObserver):
         if timeout:
             tempstore_settings.update({'timeout': timeout})
 
-        self.storage_client = HashTempStore(**tempstore_settings)
+        self.storage_client = storage(**tempstore_settings)
 
     def get_instance_field_value(self, instance, field_name):
         """
@@ -70,33 +77,16 @@ class ObjectObserver(ModelObserver):
         else:
             return getattr(instance, field_name) if field_value else field_value
 
-    def save_state(self, instance, field_name):
-        """
-        Temporarily stores field value. Timout can be define.
-        Used in comparison when the the field changes.
-        """
-        hash_field_name = str(instance.pk)
-        value = self.get_instance_field_value(instance, field_name)
-        self.storage_client.set(
-            field_name, {hash_field_name: value}
-        )
-
-    def get_state(self, instance, field_name):
-        """
-        Gets field value from temporary storage.
-        """
-        return self.storage_client.get(field_name, str(instance.pk))
-
     def get_changes(self, instance, field_name):
         """
         Compare previous and current value of the field.
         Return previous and current value in a list if there are changes
         """
 
-        previous = self.get_state(instance, field_name)
+        previous = self.storage_client.get(instance, field_name)
         current = self.get_instance_field_value(instance, field_name)
         if previous != current:
-            self.save_state(instance, field_name)
+            self.storage_client.set(self, instance, field_name)
             return {
                 'previous': previous,
                 'current': current

@@ -24,6 +24,8 @@ TEMPLATE_DIRS = (
     # Don't forget to use absolute paths, not relative paths.
     ROOTDIR + '/templates',
 )
+STATIC_URL = '/static/'
+
 
 DATABASES = {
     'default': {
