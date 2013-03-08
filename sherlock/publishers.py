@@ -31,7 +31,7 @@ class BasePublisher(object):
             self.authorise(instance, *changes)
 
     def _create_channel(self, instance, field=None):
-        Channel.objects.create_for_field(instance, field)
+        Channel.objects.create_channel(instance, field)
 
     def _requires_authorisation(self, field):
         return hasattr(self._meta, 'requires_authorisation') \
