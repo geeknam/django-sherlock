@@ -1,6 +1,11 @@
 from sherlock.observers import ObjectObserver, ModelObserver
 from sherlock.publishers import BasePublisher
 from .models import Poll, Choice
+from .signals import test_signal
+
+custom_signals = {
+    'test_signal': test_signal
+}
 
 
 class PollPublisher(BasePublisher):
@@ -28,6 +33,11 @@ class PollModelObserver(ModelObserver):
     class Meta:
         model = Poll
 
+    def test_signal_receiver(self, sender, **kwargs):
+        print '==============>', self
+        print '==============> Sender: %s' % sender
+        print '==============> Objects: %s' % kwargs['objects']
+
 
 class PollObserver(ObjectObserver):
     publisher = PollPublisher()
@@ -43,6 +53,6 @@ class ChoiceObserver(ObjectObserver):
         model = Choice
         fields = ('poll', )
 
-poll_model_observer = PollModelObserver()
+poll_model_observer = PollModelObserver(custom_signals=custom_signals)
 poll_observer = PollObserver()
 choice_observer = ChoiceObserver()

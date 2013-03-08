@@ -17,6 +17,7 @@ class Channel(models.Model):
     def __unicode__(self):
         return self.name
 
+    # TODO Find a better way to validate whether a channel is model, instance or field related
     def get_model(self):
         identifiers = self.name.split(':')
         return models.get_model(identifiers[1], identifiers[3])
