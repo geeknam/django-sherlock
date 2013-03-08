@@ -58,6 +58,7 @@ class ObjectObserver(ModelObserver):
 
         timeout = kwargs.get('tempstore_timeout', None)
         tempstore_settings = {
+            'observer': self,
             'prefix': 'sherlock:tempstore:%s:%s' % (self.get_app_label(), self.get_model_name()),
         }
         if timeout:
@@ -77,26 +78,10 @@ class ObjectObserver(ModelObserver):
         else:
             return getattr(instance, field_name) if field_value else field_value
 
-    def get_changes(self, instance, field_name):
-        """
-        Compare previous and current value of the field.
-        Return previous and current value in a list if there are changes
-        """
-
-        previous = self.storage_client.get(instance, field_name)
-        current = self.get_instance_field_value(instance, field_name)
-        if previous != current:
-            self.storage_client.set(self, instance, field_name)
-            return {
-                'previous': previous,
-                'current': current
-            }
-        return None
-
     def post_save_receiver(self, sender, instance, created, **kwargs):
         if not created:
             for observed_field in self.get_fields():
-                changes = self.get_changes(instance, observed_field)
+                changes = self.storage_client.get_changes(instance, observed_field)
                 if changes:
                     self.publisher.on_field_change(
                         instance, observed_field, changes=changes
