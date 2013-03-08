@@ -1,39 +1,39 @@
-from sherlock.observers import ObjectObserver, ModelObserver
-from .models import Poll, Choice
-from .signals import test_signal
-from .publishers import PollPublisher
+# from sherlock.observers import ObjectObserver, ModelObserver
+# from .models import Poll, Choice
+# from .signals import test_signal
+# from .publishers import PollPublisher
 
-custom_signals = {
-    'test_signal': test_signal
-}
-
-
-class PollModelObserver(ModelObserver):
-    publisher = PollPublisher()
-
-    class Meta:
-        model = Poll
-
-    def test_signal_receiver(self, sender, **kwargs):
-        print '==============>', self
-        print '==============> Sender: %s' % sender
-        print '==============> Objects: %s' % kwargs['objects']
+# custom_signals = {
+#     'test_signal': test_signal
+# }
 
 
-class PollObserver(ObjectObserver):
-    publisher = PollPublisher()
+# class PollModelObserver(ModelObserver):
+#     publisher = PollPublisher()
 
-    class Meta:
-        model = Poll
-        fields = ('question', )
+#     class Meta:
+#         model = Poll
+
+#     def test_signal_receiver(self, sender, **kwargs):
+#         print '==============>', self
+#         print '==============> Sender: %s' % sender
+#         print '==============> Objects: %s' % kwargs['objects']
 
 
-class ChoiceObserver(ObjectObserver):
+# class PollObserver(ObjectObserver):
+#     publisher = PollPublisher()
 
-    class Meta:
-        model = Choice
-        fields = ('poll', )
+#     class Meta:
+#         model = Poll
+#         fields = ('question', )
 
-poll_model_observer = PollModelObserver(custom_signals=custom_signals)
-poll_observer = PollObserver()
-choice_observer = ChoiceObserver()
+
+# class ChoiceObserver(ObjectObserver):
+
+#     class Meta:
+#         model = Choice
+#         fields = ('poll', )
+
+# poll_model_observer = PollModelObserver(custom_signals=custom_signals)
+# poll_observer = PollObserver()
+# choice_observer = ChoiceObserver()
