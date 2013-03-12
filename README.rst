@@ -15,7 +15,7 @@ Requirements
 
 Basic usage
 =============
-Observing model instance changes
+Observing model instance changes::
 
     # polls/observers.py
 
@@ -69,3 +69,7 @@ Observing model instance changes
 
     poll_model_observer = PollModelObserver(custom_signals=custom_signals)
     poll_observer = PollObserver()
+
+
+Subscribing to changes::
+To be continued...
