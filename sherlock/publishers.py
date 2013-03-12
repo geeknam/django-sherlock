@@ -10,7 +10,7 @@ class BasePublisher(object):
         """
         Called when model observer receives a 'post_save' signal
         """
-        identifier = self._create_channel(instance)
+        identifier, channel = self._create_channel(instance)
 
         publish_method = getattr(self, 'publish_instance_change', None)
         if publish_method:
@@ -20,7 +20,7 @@ class BasePublisher(object):
 
     def on_instance_delete(self, instance, **kwargs):
         # TODO: Remove the channels
-        identifier = self._create_channel(instance)
+        identifier, channel = self._create_channel(instance)
         self._publish(instance, identifier, deleted=True)
 
     def on_field_change(self, instance, field, **kwargs):
@@ -29,14 +29,14 @@ class BasePublisher(object):
         """
         changes = kwargs.get('changes')
         publish_method = getattr(self, 'publish_%s_change' % field, self._publish)
-        identifier = self._create_channel(instance, field)
+        identifier, channel = self._create_channel(instance, field)
         if not self._requires_authorisation(field):
             publish_method(instance, identifier, field=field, changes=changes)
         else:
             self.authorise(instance, *changes)
 
     def _create_channel(self, instance, field=None):
-        return Channel.objects.create_channel(instance, field)
+        return Channel.objects.create_channel(instance=instance, field=field)
 
     def _requires_authorisation(self, field):
         return hasattr(self._meta, 'requires_authorisation') \
