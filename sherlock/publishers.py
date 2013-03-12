@@ -18,12 +18,17 @@ class BasePublisher(object):
         else:
             self._publish(instance, identifier, created=created)
 
+    def on_instance_delete(self, instance, **kwargs):
+        # TODO: Remove the channels
+        identifier = self._create_channel(instance)
+        self._publish(instance, identifier, deleted=True)
+
     def on_field_change(self, instance, field, **kwargs):
         """
         Called when an observed field has changed
         """
         changes = kwargs.get('changes')
-        publish_method = getattr(self, 'publish_%s' % field, self._publish)
+        publish_method = getattr(self, 'publish_%s_change' % field, self._publish)
         identifier = self._create_channel(instance, field)
         if not self._requires_authorisation(field):
             publish_method(instance, identifier, field=field, changes=changes)
@@ -46,12 +51,12 @@ class BasePublisher(object):
         Figures out details of subscribers and publishes the notification.
         send_email() method has to be implemented
         """
-        if self._meta.email:
+        if hasattr(self._meta, 'email') and self._meta.email:
             subscribers = Subscriber.objects.filter(channels__name__in=[identifier])
             emails = [sub.email for sub in subscribers]
             self.send_email(emails, instance, **context)
 
-    def send_email(subscribers, instance, field=None, changes=None):
+    def send_email(subscribers, instance, **context):
         """
         Sends emails to all subscribers, context is provided
         """

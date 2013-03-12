@@ -1,2 +1,3 @@
-from managers import ChannelManagerTest
-from .observers import ModelObserverTest, ObjectObserverTest
+from managers_tests import ChannelManagerTest
+from model_observer_tests import ModelObserverTest, CustomSignalTest
+from object_observer_tests import ObjectObserverTest

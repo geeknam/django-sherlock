@@ -12,6 +12,10 @@ class Observer(object):
 
     __metaclass__ = Metaclass
 
+    def __init__(self):
+        if not hasattr(self, 'publisher'):
+            raise AttributeError
+
     def get_app_label(self):
         return self._meta.model._meta.app_label
 
@@ -36,19 +40,15 @@ class ModelObserver(Observer):
         E.g: a receiver for 'post_save signal' would be 'post_save_receiver'
     """
     def __init__(self, *args, **kwargs):
-        self.custom_signals = kwargs.get('custom_signals', {})
+        super(ModelObserver, self).__init__()
+        self.signals = kwargs.get('custom_signals', {})
 
-        self.custom_signals.update(default_signals)
-        for signal_name, signal in self.custom_signals.items():
+        self.signals.update(default_signals)
+        for signal_name, signal in self.signals.items():
             signal_receiver = getattr(self, '%s_receiver' % signal_name, None)
             if signal_receiver:
                 # weak=False stops the receiver from being garbage collected
                 signal.connect(signal_receiver, sender=self.get_model(), weak=False)
-
-    @property
-    def signals(self):
-        self.custom_signals.update(default_signals)
-        return self.custom_signals
 
     def __delattr__(self, attr):
         for signal_name, signal in self.signals.items():
@@ -58,6 +58,9 @@ class ModelObserver(Observer):
 
     def post_save_receiver(self, sender, instance, created, **kwargs):
         self.publisher.on_instance_change(instance, created, **kwargs)
+
+    def pre_delete_receiver(self, sender, instance, **kwargs):
+        self.publisher.on_instance_delete(instance, **kwargs)
 
 
 class ObjectObserver(ModelObserver):
