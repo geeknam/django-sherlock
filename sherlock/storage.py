@@ -24,10 +24,10 @@ class BaseStorage(object):
         """
         raise NotImplementedError
 
-    def get_changes(self, observer, instance, field_name):
+    def get_changes(self, instance, field_name):
         """
         Compare previous and current value of the field.
-        Return previous and current value in a list if there are changes:
+        Return previous and current value in a dict if there are changes:
         dict(
             previous='previous_value',
             current='current_value'

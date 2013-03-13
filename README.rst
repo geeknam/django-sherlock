@@ -72,4 +72,57 @@ Observing model instance changes::
 
 
 Subscribing to changes::
-To be continued...
+
+    from sherlock.utils import subscribe
+    from polls.models import Poll
+
+    # Subscribe to a model
+    subscribe('nam@namis.me', model=Poll)
+
+    # Subscribe to a field of an instance
+    subscribe('nam@namis.me', instance=poll, field='question')
+
+
+Customisation
+===============
+django-sherlock implements a temporary storage which stores values of
+fields which are tracked. These values are used for the comparison when
+a field is updated. By default, django-sherlock uses redis hashes to store these values.
+It is however possible to implement your own storage class if you're using Memcache or MongoDB.
+
+Write your own storage backend by extending BaseStorage class. Example::
+
+    from sherlock.storage import BaseStorage
+
+    class MemcacheStorage(BaseStorage):
+
+        def get(self, instance, field_name):
+            pass
+
+        def set(self, instance, field_name, value):
+            pass
+
+        def get_changes(self, instance, field_name):
+            """
+            Compare previous and current value of the field.
+            Return previous and current value in a dict if there are changes:
+            dict(
+                previous='previous_value',
+                current='current_value'
+            )
+            """
+            pass
+
+
+Using the custom storage backend::
+
+    from sherlock.observers import ObjectObserver
+
+    class PollObserver(ObjectObserver):
+        publisher = PollPublisher()
+
+        class Meta:
+            model = Poll
+            fields = ('question', )
+
+    poll_observer = PollObserver(storage=MemcacheStorage)
