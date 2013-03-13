@@ -1,0 +1,1 @@
+PYTHONPATH=".:tests:$PYTHONPATH" django-admin.py test polls --settings=settings

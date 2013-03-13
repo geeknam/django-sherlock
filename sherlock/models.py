@@ -1,6 +1,6 @@
 from django.conf import settings
 from django.db import models
-from .managers import ChannelManager
+from managers import ChannelManager
 
 
 class Channel(models.Model):

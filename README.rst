@@ -10,7 +10,7 @@ django-sherlock is a customizable notifications framework for Django
 Requirements
 =============
 * Django 1.3+
-* redis
+* redis (optional)
 
 
 Basic usage
@@ -88,7 +88,7 @@ Subscribing to changes::
 Customisation
 ===============
 django-sherlock implements a temporary storage which stores values of
-fields which are tracked. These values are used for the comparison when
+fields that are tracked. These values are used for the comparison when
 a field is updated. By default, django-sherlock uses redis hashes to store these values.
 It is however possible to implement your own storage class if you're using Memcache or MongoDB.
 

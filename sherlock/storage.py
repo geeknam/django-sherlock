@@ -1,9 +1,13 @@
-import redis
 from django.conf import settings
 try:
     import cPickle as pickle
 except ImportError:
     import pickle
+
+try:
+    import redis
+except ImportError:
+    pass
 
 
 class BaseStorage(object):
