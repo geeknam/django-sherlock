@@ -35,16 +35,16 @@ Observing model instance changes::
             email = True
 
         def send_email(self, emails, instance, **context):
-            print '==============>', self
-            print '==============> Sending email to: %s' % emails
-            print '==============> Instance pk: %s' % instance.pk
-            print '==============> Context: %s' % context
+            pass
 
-        def publish_question(self, instance, identifier, **context):
-            print '==============>', self
-            print '==============> Instance pk: %s' % instance.pk
-            print '==============> Identifier: %s' % identifier
-            print '==============> Context: %s' % context
+        def publish_question_change(self, instance, identifier, **context):
+            """
+            Called when `question` field has changed
+            """ 
+            pass
+
+        def test_signal_received(self, **kwargs):
+            pass
 
 
     class PollModelObserver(ModelObserver):
@@ -54,9 +54,11 @@ Observing model instance changes::
             model = Poll
 
         def test_signal_receiver(self, sender, **kwargs):
-            print '==============>', self
-            print '==============> Sender: %s' % sender
-            print '==============> Objects: %s' % kwargs['objects']
+            """
+            Receiver method called when a custom signal is sent.
+            Can be delegated to a Publisher class.
+            """
+            self.publisher.test_signal_received(**kwargs)
 
 
     class PollObserver(ObjectObserver):
